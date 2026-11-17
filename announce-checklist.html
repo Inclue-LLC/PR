@@ -139,20 +139,15 @@ button { cursor: pointer }
     <div class="grid">
       <div class="field">
         <label for="f-cat">案件カテゴリ</label>
-        <input id="f-cat" list="cat-list" placeholder="イベント・ライセンスなど" required autocomplete="off">
-        <datalist id="cat-list"></datalist>
+        <select id="f-cat" required></select>
       </div>
       <div class="field">
-        <label for="f-product">販売商品</label>
-        <input id="f-product" placeholder="例：アクリルスタンド、ぬいぐるみ" required autocomplete="off">
+        <label for="f-product">販売商品 / イベント名</label>
+        <input id="f-product" placeholder="例：アクリルスタンド、〇〇POP UP STORE" required autocomplete="off">
       </div>
       <div class="field">
-        <span class="lbl">時期</span>
-        <div class="dates">
-          <input type="date" id="f-start" aria-label="開始日" required>
-          <span>〜</span>
-          <input type="date" id="f-end" aria-label="終了日">
-        </div>
+        <label for="f-start">時期</label>
+        <input type="date" id="f-start" required>
       </div>
     </div>
     <div class="field">
@@ -186,7 +181,7 @@ const CHARS = {
   funyu:  { name: 'ふにゅ',         channels: ['x','artist','red','blog','note'] },
   monmon: { name: 'モンモン',       channels: ['x','instagram','artist','red','blog','note'] }
 };
-const CATEGORIES = ['イベント','ライセンス','POPUP','コラボ','新商品','その他'];
+const CATEGORIES = ['自社新商品','ライセンス','POP UP','その他'];
 const SOON_DAYS = 14;
 
 const $ = (s) => document.querySelector(s);
@@ -220,7 +215,12 @@ const RANK = { crit: 0, warn: 1, idle: 2, ok: 3 };
 function renderCharPicker() {
   $('#f-char').innerHTML = Object.entries(CHARS).map(([k, c], i) =>
     `<label style="--cc:var(--c-${k});--cs:var(--c-${k}-soft)"><input type="radio" name="char" value="${k}" ${i===0?'checked':''}><span class="dot"></span>${esc(c.name)}</label>`).join('');
-  $('#cat-list').innerHTML = CATEGORIES.map(c => `<option value="${esc(c)}">`).join('');
+  setCategoryOptions('');
+}
+function setCategoryOptions(current) {
+  const list = current && !CATEGORIES.includes(current) ? [...CATEGORIES, current] : CATEGORIES;
+  $('#f-cat').innerHTML = '<option value="" disabled>選択してください</option>' + list.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  $('#f-cat').value = current || '';
 }
 function updatePreview() {
   const k = document.querySelector('input[name="char"]:checked')?.value;
@@ -258,13 +258,13 @@ function renderCards() {
   if (!list.length) {
     el.innerHTML = cases.length
       ? `<div class="empty"><h2>条件に合う案件はありません</h2>フィルターを「すべて」に戻すと、ほかの案件が表示されます。</div>`
-      : `<div class="empty"><h2>まだ案件がありません</h2>右上の「＋ 案件を登録」から、キャラクター・カテゴリ・販売商品・時期を入れて最初の案件を登録してください。</div>`;
+      : `<div class="empty"><h2>まだ案件がありません</h2>右上の「＋ 案件を登録」から、キャラクター・カテゴリ・販売商品 / イベント名・時期を入れて最初の案件を登録してください。</div>`;
     return;
   }
   el.innerHTML = list.map(({ c, s }) => {
     const ch = CHARS[c.character] || { name: c.character, channels: [] };
     const k = esc(c.character);
-    const period = c.startDate ? fmt(c.startDate) + (c.endDate && c.endDate !== c.startDate ? ' 〜 ' + fmt(c.endDate) : '') : '時期未定';
+    const period = c.startDate ? fmt(c.startDate) : '時期未定';
     const items = ch.channels.map(key => {
       const v = c.checks?.[key];
       const on = !!v?.done;
@@ -301,10 +301,9 @@ function openForm(c) {
   $('#f-submit').textContent = c ? '保存する' : '登録する';
   const charKey = c?.character || Object.keys(CHARS)[0];
   document.querySelectorAll('input[name="char"]').forEach(r => r.checked = r.value === charKey);
-  $('#f-cat').value = c?.category || '';
+  setCategoryOptions(c?.category || '');
   $('#f-product').value = c?.product || '';
   $('#f-start').value = c?.startDate || '';
-  $('#f-end').value = c?.endDate || '';
   $('#f-memo').value = c?.memo || '';
   $('#f-note').textContent = '';
   updatePreview();
@@ -319,13 +318,12 @@ $('#f-char').addEventListener('change', updatePreview);
 $('#case-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!db) { $('#f-note').textContent = 'データ保存に接続できていないため登録できません。'; return; }
-  const start = $('#f-start').value, end = $('#f-end').value;
-  if (end && start && end < start) { $('#f-note').textContent = '終了日が開始日より前になっています。日付を確認してください。'; return; }
+  const start = $('#f-start').value;
   const body = {
     character: document.querySelector('input[name="char"]:checked').value,
-    category: $('#f-cat').value.trim(),
+    category: $('#f-cat').value,
     product: $('#f-product').value.trim(),
-    startDate: start, endDate: end,
+    startDate: start,
     memo: $('#f-memo').value.trim()
   };
   $('#f-submit').disabled = true;
