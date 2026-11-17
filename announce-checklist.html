@@ -1,0 +1,388 @@
+<title>告知チェックリスト</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@700&display=swap">
+<style>
+/* Layout: a register panel on top, a summary strip, then one card per project holding that character's channel checklist. */
+:root {
+  --bg: #F3F5F8; --surface: #FFFFFF; --sunk: #EBEEF3; --fg: #1B2130; --muted: #5C6578; --line: #D9DEE6;
+  --accent: #0E6F63; --accent-fg: #FFFFFF; --accent-soft: #DDF0EC;
+  --c-hanul: #2F63CF; --c-hanul-soft: #E1E9FA;
+  --c-funyu: #C9437F; --c-funyu-soft: #F9E1EC;
+  --c-monmon: #A86A0A; --c-monmon-soft: #F6EAD3;
+  --ok: #1D7F48; --ok-soft: #DCF1E4; --warn: #9A6200; --warn-soft: #FBEFD5; --crit: #BF2F27; --crit-soft: #FBE1DF;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif;
+  --font-head: "Zen Maru Gothic", "Zen Kaku Gothic New", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11141A; --surface: #191E26; --sunk: #222833; --fg: #E6E9EF; --muted: #9AA3B4; --line: #2D3441;
+  --accent: #3EC1AC; --accent-fg: #0B1F1C; --accent-soft: #173A35;
+  --c-hanul: #86A8F2; --c-hanul-soft: #1F2C4A; --c-funyu: #F08DB8; --c-funyu-soft: #3F1F2E; --c-monmon: #E6B35A; --c-monmon-soft: #3A2D14;
+  --ok: #5CCB8A; --ok-soft: #173525; --warn: #F0BB55; --warn-soft: #3A2C10; --crit: #F2847C; --crit-soft: #3F1C1A;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11141A; --surface: #191E26; --sunk: #222833; --fg: #E6E9EF; --muted: #9AA3B4; --line: #2D3441;
+  --accent: #3EC1AC; --accent-fg: #0B1F1C; --accent-soft: #173A35;
+  --c-hanul: #86A8F2; --c-hanul-soft: #1F2C4A; --c-funyu: #F08DB8; --c-funyu-soft: #3F1F2E; --c-monmon: #E6B35A; --c-monmon-soft: #3A2D14;
+  --ok: #5CCB8A; --ok-soft: #173525; --warn: #F0BB55; --warn-soft: #3A2C10; --crit: #F2847C; --crit-soft: #3F1C1A;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 64px; display: grid; gap: 20px }
+h1, h2, h3 { font-family: var(--font-head); text-wrap: balance; margin: 0 }
+h1 { font-size: 1.6rem; letter-spacing: .02em }
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px }
+.top p { margin: 4px 0 0; color: var(--muted); font-size: .9rem }
+button, input, select, textarea { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 14px; font-weight: 500 }
+.btn:hover { background: var(--sunk) }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 700 }
+.btn.primary:hover { filter: brightness(1.06) }
+.btn.danger { color: var(--crit); border-color: var(--crit) }
+.btn.small { padding: 4px 10px; font-size: .85rem }
+.btn:disabled { opacity: .5; cursor: not-allowed }
+.note { font-size: .85rem; color: var(--muted) }
+.note.err { color: var(--crit) }
+
+/* register panel */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: grid; gap: 16px }
+.panel h2 { font-size: 1.1rem }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px }
+.field { display: grid; gap: 6px; min-width: 0 }
+.field label, .field .lbl { font-size: .8rem; font-weight: 700; color: var(--muted); letter-spacing: .04em }
+.field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 11px }
+.field textarea { min-height: 64px; resize: vertical }
+.dates { display: flex; align-items: center; gap: 8px }
+.dates input { min-width: 0 }
+.seg { display: flex; flex-wrap: wrap; gap: 8px }
+.seg label { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-weight: 500; font-size: .92rem; color: var(--fg); letter-spacing: 0 }
+.seg input { position: absolute; opacity: 0; pointer-events: none }
+.seg label:has(input:checked) { border-color: var(--cc); background: var(--cs); color: var(--cc); font-weight: 700 }
+.seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc) }
+.preview { background: var(--sunk); border-radius: 8px; padding: 10px 12px; font-size: .88rem; color: var(--muted) }
+.preview b { color: var(--fg) }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+
+/* summary + filters */
+.bar { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between }
+.stats { display: flex; flex-wrap: wrap; gap: 8px }
+.stat { display: inline-flex; align-items: baseline; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: .85rem; color: var(--muted) }
+.stat b { font-size: 1.15rem; color: var(--fg); font-variant-numeric: tabular-nums }
+.stat.crit b { color: var(--crit) }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .85rem }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg) }
+.toggle { display: inline-flex; gap: 6px; align-items: center; font-size: .85rem; color: var(--muted); cursor: pointer }
+
+/* cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 16px; align-items: start }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 12px; min-width: 0 }
+.card.done { opacity: .78 }
+.chead { display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.tag { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--cs); color: var(--cc) }
+.tag.cat { background: var(--sunk); color: var(--muted) }
+.state { margin-left: auto; font-size: .78rem; font-weight: 700; padding: 2px 9px; border-radius: 6px }
+.state.ok { background: var(--ok-soft); color: var(--ok) }
+.state.warn { background: var(--warn-soft); color: var(--warn) }
+.state.crit { background: var(--crit-soft); color: var(--crit) }
+.state.idle { background: var(--sunk); color: var(--muted) }
+.card h3 { font-size: 1.12rem; overflow-wrap: anywhere }
+.meta { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums }
+.memo { font-size: .85rem; background: var(--sunk); border-radius: 6px; padding: 6px 10px; white-space: pre-wrap; overflow-wrap: anywhere }
+.prog { display: flex; align-items: center; gap: 10px; font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums }
+.track { flex: 1; height: 6px; background: var(--sunk); border-radius: 3px; overflow: hidden }
+.fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .2s }
+.card.done .fill { background: var(--ok) }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line) }
+.checks li { border-bottom: 1px solid var(--line) }
+.ck { width: 100%; display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 9px 2px; text-align: left }
+.ck:hover { background: var(--sunk) }
+.box { flex: none; width: 20px; height: 20px; border: 2px solid var(--line); border-radius: 5px; display: grid; place-items: center }
+.box svg { width: 13px; height: 13px; opacity: 0 }
+.ck[aria-checked="true"] .box { background: var(--ok); border-color: var(--ok) }
+.ck[aria-checked="true"] .box svg { opacity: 1 }
+.ck .name { flex: 1; font-weight: 500 }
+.ck[aria-checked="true"] .name { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line) }
+.ck .when { font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums }
+.ck .todo { font-size: .75rem; color: var(--crit); font-weight: 700 }
+.ck:disabled { cursor: default }
+.cfoot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center }
+.confirm { font-size: .85rem; color: var(--crit); margin-right: auto }
+
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--r); padding: 32px 20px; text-align: center; color: var(--muted) }
+.empty h2 { color: var(--fg); font-size: 1.1rem; margin-bottom: 6px }
+@media (prefers-reduced-motion: reduce) { .fill { transition: none } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>告知チェックリスト</h1>
+      <p>案件を登録すると、キャラクターごとに必要な告知先が並びます。告知したらチェックを入れてください。</p>
+    </div>
+    <button class="btn primary" id="open-form" type="button">＋ 案件を登録</button>
+  </header>
+
+  <form class="panel" id="case-form" hidden>
+    <h2 id="form-title">新しい案件を登録</h2>
+    <div class="field">
+      <span class="lbl">キャラクター</span>
+      <div class="seg" id="f-char" role="radiogroup" aria-label="キャラクター"></div>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label for="f-cat">案件カテゴリ</label>
+        <input id="f-cat" list="cat-list" placeholder="イベント・ライセンスなど" required autocomplete="off">
+        <datalist id="cat-list"></datalist>
+      </div>
+      <div class="field">
+        <label for="f-product">販売商品</label>
+        <input id="f-product" placeholder="例：アクリルスタンド、ぬいぐるみ" required autocomplete="off">
+      </div>
+      <div class="field">
+        <span class="lbl">時期</span>
+        <div class="dates">
+          <input type="date" id="f-start" aria-label="開始日" required>
+          <span>〜</span>
+          <input type="date" id="f-end" aria-label="終了日">
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-memo">メモ（任意）</label>
+      <textarea id="f-memo" placeholder="会場、担当者、告知文の方針など"></textarea>
+    </div>
+    <div class="preview" id="f-preview"></div>
+    <div class="actions">
+      <button class="btn primary" type="submit" id="f-submit">登録する</button>
+      <button class="btn" type="button" id="f-cancel">キャンセル</button>
+      <span class="note" id="f-note" role="status"></span>
+    </div>
+  </form>
+
+  <div class="bar">
+    <div class="stats" id="stats"></div>
+    <div class="filters" id="filters"></div>
+  </div>
+
+  <p class="note" id="status" role="status"></p>
+  <section class="cards" id="cards" aria-live="polite"></section>
+</div>
+
+<script>
+const CHANNELS = {
+  x: 'X', instagram: 'Instagram', artist: '作家さんに依頼', red: 'RED', blog: 'ブログ',
+  mailmag: 'メルマガ', line: 'LINE公式', note: 'note'
+};
+const CHARS = {
+  hanul:  { name: 'スタジオハヌル', channels: ['x','instagram','red','blog','mailmag','line','note'] },
+  funyu:  { name: 'ふにゅ',         channels: ['x','artist','red','blog','note'] },
+  monmon: { name: 'モンモン',       channels: ['x','instagram','artist','red','blog','note'] }
+};
+const CATEGORIES = ['イベント','ライセンス','POPUP','コラボ','新商品','その他'];
+const SOON_DAYS = 14;
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = (n) => String(n).padStart(2, '0');
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const daysUntil = (iso) => { if (!iso) return null; const [y,m,d] = iso.split('-').map(Number); const t = new Date(); t.setHours(0,0,0,0); return Math.round((new Date(y, m-1, d) - t) / 86400000); };
+const fmt = (iso) => { if (!iso) return ''; const [y,m,d] = iso.split('-').map(Number); const w = '日月火水木金土'[new Date(y,m-1,d).getDay()]; return `${y}/${m}/${d}(${w})`; };
+const fmtShort = (iso) => { if (!iso) return ''; const [,m,d] = iso.split('-').map(Number); return `${m}/${d}`; };
+
+let db = null, canWrite = true, loaded = false;
+let cases = [];
+let filterChar = 'all', onlyOpen = false;
+let editingId = null, pendingDelete = null;
+const busy = new Set();
+
+function caseStatus(c) {
+  const chs = CHARS[c.character]?.channels || [];
+  const done = chs.filter(k => c.checks?.[k]?.done).length;
+  const total = chs.length;
+  const left = daysUntil(c.startDate);
+  let level, label;
+  if (total && done === total) { level = 'ok'; label = '告知完了'; }
+  else if (left !== null && left <= 0) { level = 'crit'; label = left === 0 ? '本日開始・未告知あり' : '開始済み・未告知あり'; }
+  else if (left !== null && left <= SOON_DAYS) { level = 'warn'; label = `開始まであと${left}日`; }
+  else { level = 'idle'; label = left !== null ? `開始まで${left}日` : '準備中'; }
+  return { done, total, left, level, label };
+}
+const RANK = { crit: 0, warn: 1, idle: 2, ok: 3 };
+
+function renderCharPicker() {
+  $('#f-char').innerHTML = Object.entries(CHARS).map(([k, c], i) =>
+    `<label style="--cc:var(--c-${k});--cs:var(--c-${k}-soft)"><input type="radio" name="char" value="${k}" ${i===0?'checked':''}><span class="dot"></span>${esc(c.name)}</label>`).join('');
+  $('#cat-list').innerHTML = CATEGORIES.map(c => `<option value="${esc(c)}">`).join('');
+}
+function updatePreview() {
+  const k = document.querySelector('input[name="char"]:checked')?.value;
+  const c = CHARS[k];
+  $('#f-preview').innerHTML = c ? `<b>${esc(c.name)}</b> の告知先（${c.channels.length}件）：${c.channels.map(x => esc(CHANNELS[x])).join(' / ')}` : '';
+}
+
+function renderFilters() {
+  const opts = [['all','すべて'], ...Object.entries(CHARS).map(([k,c]) => [k, c.name])];
+  $('#filters').innerHTML = opts.map(([k, n]) => `<button type="button" class="chip" data-filter="${k}" aria-pressed="${filterChar===k}">${esc(n)}</button>`).join('') +
+    `<label class="toggle"><input type="checkbox" id="only-open" ${onlyOpen?'checked':''}>未完了のみ</label>`;
+}
+
+function renderStats() {
+  const st = cases.map(caseStatus);
+  const open = st.filter(s => s.level !== 'ok').length;
+  const urgent = st.filter(s => s.level === 'crit' || s.level === 'warn').length;
+  const missing = st.filter(s => s.level === 'crit').length;
+  $('#stats').innerHTML = `
+    <span class="stat"><b>${open}</b>未完了の案件</span>
+    <span class="stat${urgent ? ' crit' : ''}"><b>${urgent}</b>${SOON_DAYS}日以内に開始・未告知あり</span>
+    <span class="stat${missing ? ' crit' : ''}"><b>${missing}</b>開始済み・告知もれ</span>
+    <span class="stat"><b>${st.length - open}</b>告知完了</span>`;
+}
+
+const CHECK_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+
+function renderCards() {
+  const el = $('#cards');
+  if (!loaded) { el.innerHTML = `<div class="empty"><h2>案件を読み込んでいます</h2>登録済みの案件がここに表示されます。</div>`; return; }
+  let list = cases.map(c => ({ c, s: caseStatus(c) }));
+  if (filterChar !== 'all') list = list.filter(x => x.c.character === filterChar);
+  if (onlyOpen) list = list.filter(x => x.s.level !== 'ok');
+  list.sort((a, b) => RANK[a.s.level] - RANK[b.s.level] || String(a.c.startDate || '9999').localeCompare(String(b.c.startDate || '9999')));
+  if (!list.length) {
+    el.innerHTML = cases.length
+      ? `<div class="empty"><h2>条件に合う案件はありません</h2>フィルターを「すべて」に戻すと、ほかの案件が表示されます。</div>`
+      : `<div class="empty"><h2>まだ案件がありません</h2>右上の「＋ 案件を登録」から、キャラクター・カテゴリ・販売商品・時期を入れて最初の案件を登録してください。</div>`;
+    return;
+  }
+  el.innerHTML = list.map(({ c, s }) => {
+    const ch = CHARS[c.character] || { name: c.character, channels: [] };
+    const k = esc(c.character);
+    const period = c.startDate ? fmt(c.startDate) + (c.endDate && c.endDate !== c.startDate ? ' 〜 ' + fmt(c.endDate) : '') : '時期未定';
+    const items = ch.channels.map(key => {
+      const v = c.checks?.[key];
+      const on = !!v?.done;
+      return `<li><button type="button" class="ck" role="checkbox" aria-checked="${on}" data-id="${esc(c.id)}" data-ch="${key}" ${canWrite && !busy.has(c.id) ? '' : 'disabled'}>
+        <span class="box">${CHECK_SVG}</span><span class="name">${esc(CHANNELS[key])}</span>
+        ${on ? `<span class="when">${v.at ? fmtShort(v.at) + ' 済' : '済'}</span>` : (s.level === 'crit' ? '<span class="todo">未告知</span>' : '')}
+      </button></li>`;
+    }).join('');
+    const del = pendingDelete === c.id
+      ? `<span class="confirm">この案件を削除しますか？</span><button type="button" class="btn small danger" data-act="del-yes" data-id="${esc(c.id)}">削除する</button><button type="button" class="btn small" data-act="del-no">やめる</button>`
+      : `<button type="button" class="btn small" data-act="edit" data-id="${esc(c.id)}">編集</button><button type="button" class="btn small" data-act="del" data-id="${esc(c.id)}">削除</button>`;
+    return `<article class="card${s.level === 'ok' ? ' done' : ''}">
+      <div class="chead">
+        <span class="tag" style="--cc:var(--c-${k});--cs:var(--c-${k}-soft)"><span class="dot"></span>${esc(ch.name)}</span>
+        <span class="tag cat">${esc(c.category)}</span>
+        <span class="state ${s.level}">${s.label}</span>
+      </div>
+      <div><h3>${esc(c.product)}</h3><div class="meta">${period}</div></div>
+      ${c.memo ? `<div class="memo">${esc(c.memo)}</div>` : ''}
+      <div class="prog"><div class="track"><div class="fill" style="width:${s.total ? s.done / s.total * 100 : 0}%"></div></div>${s.done} / ${s.total}</div>
+      <ul class="checks">${items}</ul>
+      ${canWrite ? `<div class="cfoot">${del}</div>` : ''}
+    </article>`;
+  }).join('');
+}
+
+function render() { renderStats(); renderFilters(); renderCards(); $('#open-form').hidden = !canWrite; }
+const setStatus = (msg, err) => { const s = $('#status'); s.textContent = msg || ''; s.classList.toggle('err', !!err); };
+
+/* form */
+function openForm(c) {
+  editingId = c?.id || null;
+  $('#form-title').textContent = c ? '案件を編集' : '新しい案件を登録';
+  $('#f-submit').textContent = c ? '保存する' : '登録する';
+  const charKey = c?.character || Object.keys(CHARS)[0];
+  document.querySelectorAll('input[name="char"]').forEach(r => r.checked = r.value === charKey);
+  $('#f-cat').value = c?.category || '';
+  $('#f-product').value = c?.product || '';
+  $('#f-start').value = c?.startDate || '';
+  $('#f-end').value = c?.endDate || '';
+  $('#f-memo').value = c?.memo || '';
+  $('#f-note').textContent = '';
+  updatePreview();
+  $('#case-form').hidden = false;
+  $('#f-cat').focus();
+}
+function closeForm() { $('#case-form').hidden = true; editingId = null; }
+
+$('#open-form').addEventListener('click', () => openForm(null));
+$('#f-cancel').addEventListener('click', closeForm);
+$('#f-char').addEventListener('change', updatePreview);
+$('#case-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!db) { $('#f-note').textContent = 'データ保存に接続できていないため登録できません。'; return; }
+  const start = $('#f-start').value, end = $('#f-end').value;
+  if (end && start && end < start) { $('#f-note').textContent = '終了日が開始日より前になっています。日付を確認してください。'; return; }
+  const body = {
+    character: document.querySelector('input[name="char"]:checked').value,
+    category: $('#f-cat').value.trim(),
+    product: $('#f-product').value.trim(),
+    startDate: start, endDate: end,
+    memo: $('#f-memo').value.trim()
+  };
+  $('#f-submit').disabled = true;
+  try {
+    if (editingId) await db.doc('cases/' + editingId).update(body);
+    else await db.collection('cases').add({ ...body, checks: {}, createdAt: new Date().toISOString() });
+    closeForm();
+  } catch (err) {
+    $('#f-note').textContent = err?.code === 'invalid_argument' ? '保存する権限がありません。共有設定で「投稿者」以上の権限が必要です。' : '保存できませんでした。少し待ってからもう一度お試しください。';
+  } finally { $('#f-submit').disabled = false; }
+});
+
+/* card actions */
+$('#filters').addEventListener('click', (e) => { const b = e.target.closest('[data-filter]'); if (!b) return; filterChar = b.dataset.filter; render(); });
+$('#filters').addEventListener('change', (e) => { if (e.target.id === 'only-open') { onlyOpen = e.target.checked; renderCards(); } });
+$('#cards').addEventListener('click', async (e) => {
+  const ck = e.target.closest('.ck');
+  if (ck && db && !ck.disabled) {
+    const id = ck.dataset.id, key = ck.dataset.ch;
+    const c = cases.find(x => x.id === id); if (!c) return;
+    const next = !c.checks?.[key]?.done;
+    busy.add(id); renderCards();
+    try { await db.doc('cases/' + id).update({ checks: { [key]: { done: next, at: next ? todayISO() : null } } }); setStatus(''); }
+    catch (err) { setStatus('チェックを保存できませんでした。もう一度お試しください。', true); }
+    finally { busy.delete(id); renderCards(); }
+    return;
+  }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = b.dataset.id;
+  if (b.dataset.act === 'edit') { openForm(cases.find(x => x.id === id)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  if (b.dataset.act === 'del') { pendingDelete = id; renderCards(); }
+  if (b.dataset.act === 'del-no') { pendingDelete = null; renderCards(); }
+  if (b.dataset.act === 'del-yes' && db) {
+    pendingDelete = null;
+    try { await db.doc('cases/' + id).delete(); } catch { setStatus('削除できませんでした。もう一度お試しください。', true); }
+    renderCards();
+  }
+});
+
+/* boot */
+renderCharPicker(); updatePreview(); render();
+(async () => {
+  const claude = window.claude;
+  if (!claude?.use) { setStatus('この表示ではデータを読み込めません。claude.ai で開いてください。', true); return; }
+  const [d, u] = await Promise.all([claude.use('db'), claude.use('user')]);
+  db = d;
+  if (!db) { canWrite = false; loaded = true; render(); setStatus('データに接続できません。サインインしているか確認してください。', true); return; }
+  if (u) { try { const w = await u.can('data.write'); if (w === false) canWrite = false; } catch {} }
+  let timer = setTimeout(() => setStatus('データに接続できていません。表示が古い可能性があります。', true), 10000);
+  db.collection('cases').onSnapshot((snap) => {
+    if (!snap.metadata.fromCache && timer) { clearTimeout(timer); timer = null; setStatus(''); }
+    cases = snap.docs.map(x => ({ id: x.id, ...x.data() }));
+    loaded = true; render();
+  }, (err) => {
+    if (timer) { clearTimeout(timer); timer = null; }
+    loaded = true; render();
+    setStatus('案件を読み込めませんでした（' + err.code + '）。ページを開き直してください。', true);
+  });
+})();
+</script>
